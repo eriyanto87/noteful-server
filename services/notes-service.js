@@ -17,6 +17,9 @@ const NotesService = {
   deleteNotes(knex, id) {
     return knex.from("notes").where({ id }).delete();
   },
+  updateNotes(knex, id, updatedNotes) {
+    return knex.from("notes").where({ id }).update(updatedNotes);
+  },
 };
 
 module.exports = NotesService;

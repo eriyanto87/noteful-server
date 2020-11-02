@@ -1,19 +1,20 @@
 const express = require("express");
-const notesService = require("../services/notes-service");
+const NotesService = require("../services/notes-service");
 
 const notesRouter = express.Router();
 
 notesRouter
   .route("/")
   .get((req, res, next) => {
-    notesService
-      .getAllNotes(req.app.get("db"))
+    NotesService.getAllNotes(req.app.get("db"))
       .then((notes) => {
         res.json(notes);
       })
       .catch(next);
   })
   .post((req, res, next) => {
+    const { notes_name, notes_content } = req.body;
+    const newNotes = { notes_name, notes_content };
     for (const field of ["notes_name", "notes_content"]) {
       if (!req.body[field]) {
         return res.status(400).json({
@@ -23,16 +24,16 @@ notesRouter
         });
       }
     }
-    const newNotes = {
+    newNotes = {
       notes_name: req.body.notes_name,
       notes_content: req.body.notes_content,
     };
 
-    console.log;
-    notesService
-      .insertNotes(req.app.get("db"), newNotes)
+    console.log(newNotes, req.body.notes_name);
+
+    NotesService.insertNotes(req.app.get("db"), newNotes)
       .then((newNote) => {
-        res.status(201).json(newNote);
+        res.status(201).location(`/${newNote.id}`).json(newNote);
       })
       .catch(next);
   });
@@ -41,8 +42,7 @@ notesRouter
   .route("/:id")
   .get((req, res, next) => {
     const { id } = req.params;
-    notesService
-      .getById(req.app.get("db"), id)
+    NotesService.getById(req.app.get("db"), id)
       .then((note) => {
         if (!note) {
           return res.status(404).json({
@@ -57,10 +57,18 @@ notesRouter
   })
   .delete((req, res, next) => {
     const { id } = req.params;
-    notesService
-      .deleteNotes(req.app.get("db"), id)
+    NotesService.deleteNotes(req.app.get("db"), id)
       .then(() => {
         return res.status(204).send("note deleted").end();
+      })
+      .catch(next);
+  })
+  .patch((req, res, next) => {
+    const updatedNote = req.body;
+    console.log(updatedNote, req.params.id);
+    NotesService.updateNotes(req.app.get("db"), req.params.id, updatedNote)
+      .then(() => {
+        res.status(204).end();
       })
       .catch(next);
   });
