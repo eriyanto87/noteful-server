@@ -2,6 +2,7 @@ const express = require("express");
 const NotesService = require("../services/notes-service");
 
 const notesRouter = express.Router();
+const bodyParser = express.json();
 
 notesRouter
   .route("/")
@@ -12,9 +13,9 @@ notesRouter
       })
       .catch(next);
   })
-  .post((req, res, next) => {
-    const { notes_name, notes_content } = req.body;
-    const newNotes = { notes_name, notes_content };
+  .post(bodyParser, (req, res, next) => {
+    const { notes_name, notes_content, folder_id, date_modified } = req.body;
+    const newNotes = { notes_name, notes_content, folder_id, date_modified };
     for (const field of ["notes_name", "notes_content"]) {
       if (!req.body[field]) {
         return res.status(400).json({
@@ -24,13 +25,6 @@ notesRouter
         });
       }
     }
-    newNotes = {
-      notes_name: req.body.notes_name,
-      notes_content: req.body.notes_content,
-    };
-
-    console.log(newNotes, req.body.notes_name);
-
     NotesService.insertNotes(req.app.get("db"), newNotes)
       .then((newNote) => {
         res.status(201).location(`/${newNote.id}`).json(newNote);
@@ -63,7 +57,7 @@ notesRouter
       })
       .catch(next);
   })
-  .patch((req, res, next) => {
+  .patch(bodyParser, (req, res, next) => {
     const updatedNote = req.body;
     console.log(updatedNote, req.params.id);
     NotesService.updateNotes(req.app.get("db"), req.params.id, updatedNote)
