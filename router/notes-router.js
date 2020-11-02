@@ -12,4 +12,21 @@ notesRouter.route("/").get((req, res, next) => {
     .catch(next);
 });
 
+notesRouter.route("/:id").get((req, res, next) => {
+  const { id } = req.params;
+  notesService
+    .getById(req.app.get("db"), id)
+    .then((note) => {
+      if (!note) {
+        return res.status(404).json({
+          error: {
+            message: `Note Not Found`,
+          },
+        });
+      }
+      res.json(note);
+    })
+    .catch(next);
+});
+
 module.exports = notesRouter;
